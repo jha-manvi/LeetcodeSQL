@@ -32,32 +32,12 @@ Return the result table in any order.
 
 */
 
-with
-    quality
-    as
-    (
-        SELECT
-            query_name,
-            result,
-            cast(rating as decimal)/position as qua
-        from queries
-    ),
-
-    per
-    as
-    (
-        SELECT
-            query_name,
-            result
-        from queries
-        where rating < 3
-    )
-
-select
-    q.query_name,
-    round(avg(qua),2) as quality,
-    round((cast(100*count(p.query_name) as decimal))/count(q.query_name),2) as poor_query_percentage
-from
-    quality q left join per p
-    on q.query_name=p.query_name and p.result=q.result
-group by q.query_name
+SELECT
+    query_name,
+    round(avg(cast(rating as decimal)/position),2) as quality,
+    round(cast(sum(
+    CASE
+        when rating < 3 THEN 1 else 0 end) as decimal)*100/count(*),2) as poor_query_percentage
+FROM
+    Queries
+GROUP BY query_name
